@@ -3,6 +3,7 @@
 import html.parser
 import itertools
 import os
+import inspect
 import re
 import shutil
 import subprocess
@@ -12,6 +13,8 @@ from bs4 import BeautifulSoup
 import inflection
 import requests
 
+import zdgen
+from zdgen.template import template
 
 # See README.md for documentation.
 
@@ -42,12 +45,6 @@ api_actions = [
     'update',
     'verify',
     ]
-
-with open('api_template.py', 'r') as template_file:
-    template = template_file.read()
-
-# os.chdir('old.developer.zendesk.com/documentation/rest_api')
-# os.chdir('developer.zendesk.com/rest_api/docs/core')
 
 zen_url = 'https://developer.zendesk.com'
 
@@ -134,7 +131,8 @@ for category in sorted(docpages.keys()):
 
 doc_files = os.listdir()
 os.chdir('..')
-patchfiles = os.listdir('patches')
+pathpath = os.path.join(dirname(inspect.getfile(zdgen)), 'patches')
+patchfiles = os.listdir(patchpath)
 shutil.copytree(apidocs_orig, apidocs)
 os.chdir(apidocs)
 
@@ -142,7 +140,7 @@ for patchfile in patchfiles:
     try:
         sp = subprocess.check_output([
             'patch', '-p1', patchfile,
-            os.path.join('..', 'patches', patchfile)])
+            os.path.join(pathpath, patchfile)])
     except subprocess.CalledProcessError as e:
         print('Failed to patch {}. Exit {}\n'.format(patchfile, e.returncode))
         print('Output was:\n')
