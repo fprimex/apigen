@@ -15,7 +15,7 @@ with something like Cygwin.
 # Contributing
 
 Pull requests and patches to make `zdgen` compatible with Python 2 will not be
-accepted. This is Python 3 codebase. The _output_ of `zdgen` for Python,
+accepted. This is a Python 3 codebase. The _output_ of `zdgen` for Python,
 however, is aimed to be Python 2 and Python 3 compliant, and patches to fix
 Python 2 compatibility in the output are welcome.
 
