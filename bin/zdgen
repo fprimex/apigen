@@ -131,7 +131,7 @@ for category in sorted(docpages.keys()):
 
 doc_files = os.listdir()
 os.chdir('..')
-pathpath = os.path.join(dirname(inspect.getfile(zdgen)), 'patches')
+patchpath = os.path.join(os.path.dirname(inspect.getfile(zdgen)), 'patches')
 patchfiles = os.listdir(patchpath)
 shutil.copytree(apidocs_orig, apidocs)
 os.chdir(apidocs)
@@ -140,7 +140,7 @@ for patchfile in patchfiles:
     try:
         sp = subprocess.check_output([
             'patch', '-p1', patchfile,
-            os.path.join(pathpath, patchfile)])
+            os.path.join(patchpath, patchfile)])
     except subprocess.CalledProcessError as e:
         print('Failed to patch {}. Exit {}\n'.format(patchfile, e.returncode))
         print('Output was:\n')

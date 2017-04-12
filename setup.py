@@ -23,5 +23,6 @@ setup(
         'Topic :: Internet',
         'Programming Language :: Python :: 3',
     ],
+    zip_safe = False,
 )
 
