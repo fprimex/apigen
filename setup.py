@@ -3,11 +3,12 @@ import sys
 
 setup(
     # Basic package information.
-    name = 'zdesk_apigen',
+    name = 'zdgen',
     author = 'Brent Woodruff',
     version = '1.0.0',
+    scripts = ['bin/zdgen'],
     author_email = 'brent@fprimex.com',
-    packages = ['zdesk'],
+    packages = ['zdgen'],
     include_package_data = True,
     install_requires = ['requests', 'inflection', 'beautifulsoup4'],
     license='LICENSE.txt',
