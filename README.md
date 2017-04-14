@@ -32,7 +32,30 @@ $ python setup.py develop
 
 $ cd somewhere/you/want/to/store/docs/and/output
 
-$ zdgen
+$ zdgen [options] BACKEND
+```
+
+# Usage
+
+Full options to `zdgen` are shown below in the help output:
+
+```
+usage: zdgen [-h] [-out OUTFILE] [-docs DOCDIR] BACKEND
+
+description:
+  Generate Zendesk language bindings directly from documentation located at
+  developer.zendesk.com. Available Backends are:
+
+  zdesk   - Python 2 and 3 for use with zdesk. File: zdesk_api.py
+  listing - Text file listing of all endpoints. File: listing.txt
+
+positional arguments:
+  BACKEND       Programming language to generate binding for
+
+optional arguments:
+  -h, --help    show this help message and exit
+  -out OUTFILE  Output file for the binding (default: from backend)
+  -docs DOCDIR  Directory Zendesk docs will be stored in (default: apidocs)
 ```
 
 # Under the hood
@@ -49,8 +72,8 @@ When `zdgen` is executed for the first time, the following happens:
 * Patched `apidocs` pages are scraped for REST API info
 * Duplicates, redundant, and ambiguous endpoints are resolved
 * The actual `zdesk_api.py` code is generated
-* The code is formatted into (appended) to the template
-* `zdesk_api.py` is written to the current directory
+* The code is formatted into to the template
+* The backend file is written to the current directory or given path
 
 On subsequent runs, the following happens:
 

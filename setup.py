@@ -10,7 +10,7 @@ setup(
     author_email = 'brent@fprimex.com',
     packages = ['zdgen'],
     include_package_data = True,
-    install_requires = ['requests', 'inflection', 'beautifulsoup4'],
+    install_requires = ['plac', 'requests', 'inflection', 'beautifulsoup4'],
     license='LICENSE.txt',
     url = 'https://github.com/fprimex/zdesk_apigen',
     keywords = 'zendesk api helpdesk',
