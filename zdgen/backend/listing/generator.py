@@ -19,7 +19,13 @@ def generate(api_items, duplicate_api_items, dupe_info):
         if query:
             query = '?' + query
 
-        content += '{}{}\n'.format(item['path'], query)
+        # We expect to have a method but it is not guaranteed
+        if item['method'] is None:
+            method = 'MULTIPLE'
+        else:
+            method = item['method']
+
+        content += '{:<8} {}{}\n'.format(method, item['path'], query)
 
     return ('listing.txt', content)
 
