@@ -31,7 +31,6 @@ api_actions = [
     'logout',
     'make',
     'mark',
-    'me',
     'merge',
     'preview',
     'recover',
@@ -267,7 +266,8 @@ def parse_docs(apidocs, doc_files):
                         api_item['method'] == 'GET' and
                         (len(api_item['path_params']) == 0 or
                          len(api_item['path_params']) == 1 and
-                             api_item['path_params'][0] == 'locale')
+                             api_item['path_params'][0] == 'locale') and
+                         (name[-3:] != '_me' and '_me_' not in name)
                     ):
                         name = name + '_list'
 
