@@ -42,33 +42,3 @@ diff -r -u apidocs_orig/hc_articles apidocs/hc_articles
  </pre>
        <p>
         The
-@@ -916,7 +931,7 @@
-       </p>
-       <p>
-        <code>
--        GET /api/v2/help_center/en-us/articles.json?sort_by=title
-+        GET /api/v2/help_center/{locale}/articles.json?sort_by=title
-        </code>
-       </p>
-       <p>
-@@ -1111,7 +1126,7 @@
-         </code>
-         (
-         <code>
--         GET /api/v2/help_center/en-us/articles.json?label_names=photos,camera
-+         GET /api/v2/help_center/{locale}/articles.json?label_names=photos,camera
-         </code>
-         )
-        </li>
-@@ -1132,6 +1147,11 @@
-          GET /api/v2/help_center/{locale}/articles/{id}.json
-         </code>
-        </li>
-+       <li>
-+        <code>
-+         GET /api/v2/help_center/articles/{id}.json
-+        </code>
-+       </li>
-       </ul>
-       <p>
-        Shows the properties of an article.
