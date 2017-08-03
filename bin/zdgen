@@ -487,7 +487,7 @@ def resolve_duplicates(api_items, duplicate_api_items):
 # (help, kind, abbrev, type, choices, metavar)
 def main(backend: ('Programming language to generate binding for',
                    'positional', None, None,
-                   ['zdesk', 'listing'], 'BACKEND'),
+                   ['zdesk', 'listing', 'go'], 'BACKEND'),
          out: ('Output file for the binding (default: from backend)',
                'option', None, str, None, 'OUTFILE') = None,
          docs: ('Directory Zendesk docs will be stored in (default: apidocs)',
@@ -498,6 +498,7 @@ description:
   developer.zendesk.com. Available Backends are:
 
   zdesk   - Python 2 and 3 for use with zdesk. File: zdesk_api.py
+  go      - Golang for use with zdesk-go. File: zdesk_api.go
   listing - Text file listing of all endpoints. File: listing.txt"""
 
     doc_files = get_docs(docs)
@@ -511,6 +512,9 @@ description:
     elif backend == 'listing':
         from zdgen.backend.listing.generator import generate
         from zdgen.backend.listing.template import template
+    elif backend == 'go':
+        from zdgen.backend.go.generator import generate
+        from zdgen.backend.go.template import template
         
     api_file, content = generate(api_items, duplicate_api_items, dupe_info)
 
