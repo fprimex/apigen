@@ -12,7 +12,7 @@ CHECK_TPL = """\tif i.{0} == "" {{
 """
 
 FUNC_BODY_TPL = """\tresp, err := c.Request("{}", path, ro)
-\treturn handle(resp, err)
+\treturn handle(resp, ro, err)
 }}
 """
 
