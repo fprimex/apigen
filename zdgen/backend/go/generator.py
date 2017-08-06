@@ -1,9 +1,9 @@
 import itertools
 import re
 
-FUNC_TPL = 'func (c *Client) {0}(i *{0}Input, ro *RequestOptions) ([]byte, error) {{\n'
+FUNC_TPL = 'func (c *Client) {0}(i *{0}Input, ro *RequestOptions) (*http.Response, error) {{\n'
 
-NOINPUT_FUNC_TPL = 'func (c *Client) {0}(ro *RequestOptions) ([]byte, error) {{\n'
+NOINPUT_FUNC_TPL = 'func (c *Client) {0}(ro *RequestOptions) (*http.Response, error) {{\n'
 
 CHECK_TPL = """\tif i.{0} == "" {{
 \t\treturn nil, errors.New("Missing required field '{0}'")
@@ -11,10 +11,6 @@ CHECK_TPL = """\tif i.{0} == "" {{
 
 """
 
-FUNC_BODY_TPL = """\tresp, err := c.Request("{}", path, ro)
-\treturn handle(resp, ro, err)
-}}
-"""
 
 def _sanitize(q):
     return q.replace('[', '_').replace(']', '')
@@ -54,7 +50,7 @@ def generate(api_items, duplicate_api_items, dupe_info):
             content += 'type {}Input struct {{\n'.format(camel_name)
 
             for p in camel_params:
-                content += '{} string\n'.format(p)
+                content += '\t{} string\n'.format(p)
 
             for p in camel_opt_params:
                 content += '{} string\n'.format(p)
@@ -79,21 +75,19 @@ def generate(api_items, duplicate_api_items, dupe_info):
 
         if item['path_params']:
             content += '\tapi_path := {}\n'.format(api_path)
-            content += "\tpath := fmt.Sprintf(api_path, {})\n".format(input_params)
+            content += '\tpath := fmt.Sprintf(api_path, {})\n'.format(input_params)
         else:
             content += '\tpath := {}\n'.format(api_path)
 
         if item['opt_path']:
             opt_test = ' '.join(['i.{} != ""'.format(p) for p in camel_opt_params])
-            #opt_test = 'i.{} != nil'.format(camel_opt_params.pop())
-            #opt_test = opt_test + ' != nil && i.'.join(camel_opt_params)
             input_params = ', '.join(['i.{}'.format(p) for p in camel_opt_params])
-            content += '\tif {} {{\n'.format(opt_test)
+            content += '\n\tif {} {{\n'.format(opt_test)
             content += '\t\tapi_opt_path := "{}"\n'.format(item['opt_path'])
             content += "\t\tpath = fmt.Sprintf(api_opt_path, {})\n".format(input_params)
-            content += '}\n'
+            content += '\t}\n'
 
-        content += FUNC_BODY_TPL.format(item['method'])
+        content += '\treturn c.Request("{}", path, ro)\n}}\n\n'.format(item['method'])
 
     return ('zdesk_api.go', content)
 
