@@ -93,7 +93,7 @@ If patches are needed, then to create them I do the following:
   first:
 
 ```
-$ cd apidocs_orig
+$ cd apidocs
 $ patch -p1 < path/to/source/or/package/install/patches/core_stuff
 ```
 
