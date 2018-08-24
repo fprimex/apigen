@@ -30,15 +30,6 @@ diff -r -u apidocs_orig/hc_sections apidocs/hc_sections
  </pre>
        <p>
         The
-@@ -841,7 +851,7 @@
-       <ul>
-        <li>
-         <code>
--         GET /api/v2/help_center/en-us/sections.json?include=access_policies
-+         GET /api/v2/help_center/{locale}/sections.json?include=access_policies
-         </code>
-        </li>
-       </ul>
 @@ -913,6 +923,11 @@
           GET /api/v2/help_center/{locale}/sections/{id}.json
          </code>
