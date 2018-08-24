@@ -48,7 +48,7 @@ docpages = {
     'core': '/rest_api/docs/core/introduction',
     'hc': '/rest_api/docs/help_center/introduction',
     'chat': '/rest_api/docs/chat/introduction', 
-    'talk': '/rest_api/docs/voice-api/talk',
+    'talk': '/rest_api/docs/voice-api/phone_numbers',
     'nps': '/rest_api/docs/nps-api/introduction',
 }
 
@@ -187,6 +187,7 @@ def parse_docs(apidocs, doc_files):
 
                 is_singular = False
                 api_item = {}
+                api_item['docfile'] = doc_file
                 api_item['docpage'] = docpage + last_doc_anchor
                 api_item['path_params'] = []
                 api_item['opt_path_params'] = []
@@ -329,9 +330,10 @@ def resolve_duplicates(api_items, duplicate_api_items):
                         dupe['query_params']))
 
             elif same_method and not (same_path_params and same_path):
-            # The path or path parameters differ, so we have optional or
-            # ambiguous arguments. There may be query parameter differences,
-            # which will all be consolidated as optional parameters.
+                # The path or path parameters differ, so we either do not have
+                # a dupe, or have optional or ambiguous arguments. There may be
+                # query parameter differences, which will all be consolidated
+                # as optional parameters.
 
                 # Common parameters are all required
                 required = set(dupe['path_params']) & set(item['path_params'])
@@ -443,6 +445,26 @@ def resolve_duplicates(api_items, duplicate_api_items):
                                 item['query_params'] = list(
                                     set(item['query_params'].copy() +
                                         dupe['query_params']))
+
+                            elif ipart != jpart:
+                                # This is not actually a dupe. The generated
+                                # names of these two methods are the same, but
+                                # actually point to two different paths. The
+                                # names need to be differentiated.
+
+                                # The shorter path will become the 'fixed' one
+                                # by adding the prefix of the docpage. E.g.
+                                # core_, hc_, nps_
+                                if len(item['path']) > len(dupe['path']):
+                                    fixed_name = dupe['docfile'].split('_')[0] + "_" + name
+                                    api_items[fixed_name] = dupe.copy()
+                                else:
+                                    fixed_name = item['docfile'].split('_')[0] + "_" + name
+                                    api_items[fixed_name] = item.copy()
+                                    api_items[name] = dupe.copy()
+
+                                handled = True
+                                break
 
                     if not handled:
                         dupe_info += \
