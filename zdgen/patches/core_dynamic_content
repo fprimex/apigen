@@ -1,16 +1,7 @@
 diff -r -u apidocs_orig/core_dynamic_content apidocs/core_dynamic_content
---- apidocs_orig/core_dynamic_content	2015-01-22 15:33:13.000000000 -0500
-+++ apidocs/core_dynamic_content	2015-01-31 23:47:12.000000000 -0500
-@@ -1428,7 +1428,7 @@
-       </a>
-       <p>
-        <code>
--        GET /api/v2/dynamic_content/items/3/variants.json
-+        GET /api/v2/dynamic_content/items/{id}/variants.json
-        </code>
-       </p>
-       <p>
-@@ -1662,7 +1662,7 @@
+--- apidocs_orig/core_dynamic_content	2019-08-06 11:07:56.000000000 -0400
++++ apidocs/core_dynamic_content	2019-08-06 11:21:23.000000000 -0400
+@@ -1890,7 +1890,7 @@
        </a>
        <p>
         <code>
@@ -19,7 +10,7 @@ diff -r -u apidocs_orig/core_dynamic_content apidocs/core_dynamic_content
         </code>
        </p>
        <span class="anchor" id="allowed-for">
-@@ -1758,7 +1758,7 @@
+@@ -2097,7 +2097,7 @@
        </a>
        <p>
         <code>
@@ -27,8 +18,8 @@ diff -r -u apidocs_orig/core_dynamic_content apidocs/core_dynamic_content
 +        PUT /api/v2/dynamic_content/items/{item_id}/variants/{id}.json
         </code>
        </p>
-       <span class="anchor" id="allowed-for">
-@@ -1899,7 +1899,7 @@
+       <p>
+@@ -2246,7 +2246,7 @@
        </a>
        <p>
         <code>
