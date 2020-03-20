@@ -250,19 +250,19 @@ def parse_docs(apidocs, doc_files):
                     api_item['query_params'].append(query_items[0])
 
                 path_parts.reverse()
-                name = '_'.join(path_parts)
+                name = ' '.join(path_parts)
                 if is_singular:
                     name = inflection.singularize(name)
 
                 if not has_action:
                     if api_item['method'] == 'DELETE':
-                        name = name + '_delete'
+                        name = name + ' delete'
                     elif api_item['method'] == 'PUT':
-                        name = name + '_update'
+                        name = name + ' update'
                     elif api_item['method'] == 'POST':
-                        name = name + '_create'
+                        name = name + ' create'
                     elif api_item['method'] == 'GET' and is_singular:
-                        name = name + '_show'
+                        name = name + ' show'
                     elif (
                         api_item['method'] == 'GET' and
                         (len(api_item['path_params']) == 0 or
@@ -270,7 +270,7 @@ def parse_docs(apidocs, doc_files):
                              api_item['path_params'][0] == 'locale') and
                          (name[-3:] != '_me' and '_me_' not in name)
                     ):
-                        name = name + '_list'
+                        name = name + ' list'
 
                 api_item['path_params'].reverse()
                 api_item['query_params'].reverse()
@@ -509,7 +509,7 @@ def resolve_duplicates(api_items, duplicate_api_items):
 # (help, kind, abbrev, type, choices, metavar)
 def main(backend: ('Programming language to generate binding for',
                    'positional', None, None,
-                   ['zdesk', 'listing', 'go'], 'BACKEND'),
+                   ['zdesk', 'listing', 'go', 'junonia'], 'BACKEND'),
          out: ('Output file for the binding (default: from backend)',
                'option', None, str, None, 'OUTFILE') = None,
          docs: ('Directory Zendesk docs will be stored in (default: apidocs)',
@@ -537,6 +537,9 @@ description:
     elif backend == 'go':
         from zdgen.backend.go.generator import generate
         from zdgen.backend.go.template import template
+    elif backend == 'junonia':
+        from zdgen.backend.junonia.generator import generate
+        from zdgen.backend.junonia.template import template
         
     api_file, content = generate(api_items, duplicate_api_items, dupe_info)
 
