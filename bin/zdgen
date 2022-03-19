@@ -8,6 +8,7 @@ import re
 import shutil
 import subprocess
 import urllib.parse
+import sys
 
 from bs4 import BeautifulSoup
 import inflection
@@ -45,32 +46,28 @@ api_actions = [
 zen_url = 'https://developer.zendesk.com'
 
 docpages = {
-    'core': '/rest_api/docs/core/introduction',
-    'hc': '/rest_api/docs/help_center/introduction',
-    'chat': '/rest_api/docs/chat/introduction', 
-    'talk': '/rest_api/docs/voice-api/phone_numbers',
-    'nps': '/rest_api/docs/nps-api/introduction',
+    'ticketing': '/api-reference/ticketing/introduction',
+    'hc':        '/api-reference/help_center/help-center-api/introduction',
+    'chat':      '/api-reference/live-chat/introduction',
+    'talk':      '/api-reference/voice/talk-api/introduction',
 }
 
 skippages = [
-    '/rest_api/docs/core/introduction',
-    '/rest_api/docs/core/getting_started',
-    '/rest_api/docs/core/api_changes',
-    '/rest_api/docs/core/restrictions',
-    '/rest_api/docs/help_center/introduction',
-    '/rest_api/docs/zopim/introduction',
-    '/rest_api/docs/zopim/restrictions',
-    '/rest_api/docs/zopim/changes_roadmap',
-    '/rest_api/docs/web-portal/webportal_introduction',
-    '/rest_api/docs/nps-api/introduction',
+    '/api-reference/ticketing/introduction',
+    '/api-reference/help_center/help-center-api/introduction',
+    '/api-reference/live-chat/introduction',
+    '/api-reference/voice/talk-api/introduction',
+    '/api-reference/ticketing/nps-api/introduction',
+    '/api-reference/ticketing/jira/jira'
 ]
 
 skipfiles = [
-    'core_introduction',
-    'webportal_webportal_introduction',
-    'hc_introduction',
-    'chat_introduction',
-    'nps_introduction',
+    'ticketing_introduction',
+    'help_center_introduction',
+    'live_chat_introduction',
+    'voice_talk_api_chat_introduction',
+    'ticketing_nps_api_introduction',
+    'ticketing_jira_jira',
 ]
 
 
@@ -101,10 +98,10 @@ def get_docs(apidocs):
                 fout.write(content)
 
         soup = BeautifulSoup(content, "html.parser")
-        sidenav = soup(attrs={'class': 'docs-sidenav'})[0]
+        sidenav = soup.find('nav', attrs={'aria-label': 'Sidebar navigation'})
 
         for a in sidenav.find_all('a'):
-            link = a.attrs['href']
+            link = a.attrs['href'].removesuffix('/')
             filename = '_'.join([category, os.path.basename(link)])
 
             if link[0] == '#':
@@ -157,8 +154,7 @@ def parse_docs(apidocs, doc_files):
 
     def code_pre_docanchor(tag):
         class_ = tag.attrs.get('class', ())
-        return (tag.name == 'code' or tag.name == 'pre' or
-                (tag.name == 'a' and 'doc-anchor-link' in class_))
+        return tag.name == 'code' or tag.name == 'pre' or tag.name == 'a'
 
     os.chdir(apidocs)
 
@@ -166,13 +162,15 @@ def parse_docs(apidocs, doc_files):
     duplicate_api_items = {}
 
     for doc_file in doc_files:
-        if '.orig' in doc_file or doc_file in skipfiles:
+        if '.orig' in doc_file or '.swp' in doc_file or doc_file in skipfiles:
             continue
 
+        print(doc_file)
         with open(doc_file) as doc:
             soup = BeautifulSoup(doc, "html.parser")
 
-        for tag in soup.find_all(code_pre_docanchor):
+        items = soup.find_all(code_pre_docanchor)
+        for tag in items:
             if tag.name == 'a':
                 last_doc_anchor = tag['href']
                 continue
@@ -203,7 +201,7 @@ def parse_docs(apidocs, doc_files):
                 api_item['path'] = url.path
 
                 # Split the path and remove the first (always empty) item and
-                # /api/v2
+                # /api/v2 or /api/services
                 param_indexes = []
                 path_parts = url.path.split('/')
 
@@ -219,11 +217,29 @@ def parse_docs(apidocs, doc_files):
                     del path_parts[0]
                     del path_parts[0]
 
+                if '/'.join(path_parts[:2]) == 'api/services':
+                    del path_parts[0]
+                    del path_parts[0]
+
                 make_next_singular = False
                 path_parts.reverse()
                 for i, path_part in enumerate(path_parts):
                     part, ext = os.path.splitext(path_part)
                     path_parts[i] = part
+
+                    if (not part.startswith('{')) and part.endswith('}'):
+                        api_item['opt_path'] = api_item['path'].replace(
+                           '{/' + part, '/{' + part)
+
+                        api_item['path'] = api_item['path'].replace(
+                            '{/' + part, '')
+
+                        path_parts[i+1] = path_parts[i+1].removesuffix('{')
+                        api_item['opt_path_params'].append(part[:-1])
+
+                        param_indexes.append(i)
+                        make_next_singular = True
+                        continue
 
                     if part.startswith('{'):
                         api_item['path_params'].append(part[1:-1])
@@ -250,19 +266,19 @@ def parse_docs(apidocs, doc_files):
                     api_item['query_params'].append(query_items[0])
 
                 path_parts.reverse()
-                name = ' '.join(path_parts)
+                name = '_'.join(path_parts)
                 if is_singular:
                     name = inflection.singularize(name)
 
                 if not has_action:
                     if api_item['method'] == 'DELETE':
-                        name = name + ' delete'
+                        name = name + '_delete'
                     elif api_item['method'] == 'PUT':
-                        name = name + ' update'
+                        name = name + '_update'
                     elif api_item['method'] == 'POST':
-                        name = name + ' create'
+                        name = name + '_create'
                     elif api_item['method'] == 'GET' and is_singular:
-                        name = name + ' show'
+                        name = name + '_show'
                     elif (
                         api_item['method'] == 'GET' and
                         (len(api_item['path_params']) == 0 or
@@ -270,10 +286,13 @@ def parse_docs(apidocs, doc_files):
                              api_item['path_params'][0] == 'locale') and
                          (name[-3:] != '_me' and '_me_' not in name)
                     ):
-                        name = name + ' list'
+                        name = name + '_list'
 
                 api_item['path_params'].reverse()
                 api_item['query_params'].reverse()
+
+                if '-' in name:
+                  continue
 
                 if name in api_items:
                     if name not in duplicate_api_items:
@@ -281,6 +300,7 @@ def parse_docs(apidocs, doc_files):
                     duplicate_api_items[name].append(api_item)
                     continue
 
+                print(f'  {name}')
                 api_items[name] = api_item
 
                 continue
