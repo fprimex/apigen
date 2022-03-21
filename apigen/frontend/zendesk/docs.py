@@ -15,7 +15,7 @@ import inflection
 import requests
 import plac
 
-import zdgen
+import apigen
 
 
 api_actions = [
@@ -127,13 +127,14 @@ def get_docs(apidocs):
 
     docs_list = os.listdir()
     os.chdir('..')
+    patch_docs(docs)
     return docs_list
 
 
 def patch_docs(apidocs):
     apidocs_orig = '{0}_orig'.format(apidocs)
 
-    patchpath = os.path.join(os.path.dirname(inspect.getfile(zdgen)), 'patches')
+    patchpath = os.path.join(os.path.dirname(inspect.getfile(apigen)), 'patches')
     patchfiles = os.listdir(patchpath)
     shutil.copytree(apidocs_orig, apidocs)
     os.chdir(apidocs)
@@ -524,52 +525,4 @@ def resolve_duplicates(api_items, duplicate_api_items):
 
     if dupe_info:
         return dupe_info
-
-
-# (help, kind, abbrev, type, choices, metavar)
-def main(backend: ('Programming language to generate binding for',
-                   'positional', None, None,
-                   ['zdesk', 'listing', 'go', 'junonia'], 'BACKEND'),
-         out: ('Output file for the binding (default: from backend)',
-               'option', None, str, None, 'OUTFILE') = None,
-         docs: ('Directory Zendesk docs will be stored in (default: apidocs)',
-                'option', None, str, None, 'DOCDIR') ='apidocs'):
-    """\
-description:
-  Generate Zendesk language bindings directly from documentation located at
-  developer.zendesk.com. Available Backends are:
-
-  zdesk   - Python 2 and 3 for use with zdesk. File: zdesk_api.py
-  go      - Golang for use with zdesk-go. File: zdesk_api.go
-  listing - Text file listing of all endpoints. File: listing.txt"""
-
-    doc_files = get_docs(docs)
-    patch_docs(docs)
-    api_items, duplicate_api_items, dupe_info = parse_docs(docs, doc_files)
-
-
-    if backend == 'zdesk':
-        from zdgen.backend.zdesk.generator import generate
-        from zdgen.backend.zdesk.template import template
-    elif backend == 'listing':
-        from zdgen.backend.listing.generator import generate
-        from zdgen.backend.listing.template import template
-    elif backend == 'go':
-        from zdgen.backend.go.generator import generate
-        from zdgen.backend.go.template import template
-    elif backend == 'junonia':
-        from zdgen.backend.junonia.generator import generate
-        from zdgen.backend.junonia.template import template
-        
-    api_file, content = generate(api_items, duplicate_api_items, dupe_info)
-
-    if not out:
-        out = api_file
-
-    with open(out, 'w') as f:
-        f.write(template.format(content))
-
-if __name__ == '__main__':
-    import plac
-    plac.call(main)
 

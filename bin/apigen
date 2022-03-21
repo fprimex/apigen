@@ -1,0 +1,65 @@
+#!/usr/bin/env python3
+
+# (help, kind, abbrev, type, choices, metavar)
+def main(frontend: ('API to implement',
+                   'positional', None, None,
+                   ['zendesk', 'tfc'], 'FRONTEND'),
+         backend: ('Programming language to generate binding for',
+                   'positional', None, None,
+                   ['zdesk', 'tfc', 'listing', 'go', 'junonia'], 'BACKEND'),
+         out: ('Output file for the binding (default: from backend)',
+               'option', None, str, None, 'OUTFILE') = None,
+         docs: ('Directory Zendesk docs will be stored in (default: apidocs)',
+                'option', None, str, None, 'DOCDIR') ='apidocs'):
+    """\
+description:
+  Generate an API language binding directly from the API's documentation
+
+  Available frontend APIs are:
+  zendesk - The Zendesk helpdesk REST API
+  tfc     - The Terraform Cloud and Enterprise REST API
+
+  Available Backends are:
+  zdesk   - Python for use with zdesk. File: zdesk_api.py
+  tfc     - Python for use with tfc. File: tfc_api.py
+  go      - Golang for use with zdesk-go. File: zdesk_api.go
+  listing - Text file listing of all endpoints. File: listing.txt"""
+
+    if frontend == 'zendesk':
+        from apigen.frontend.zendesk.docs import get_docs
+        from apigen.frontend.zendesk.docs import parse_docs
+    elif frontend == 'tfc':
+        from apigen.frontend.tfc.docs import get_docs
+        from apigen.frontend.tfc.docs import parse_docs
+
+    doc_files = get_docs(docs)
+    api_items, duplicate_api_items, dupe_info = parse_docs(docs, doc_files)
+
+    if backend == 'zdesk':
+        from apigen.backend.zdesk.generator import generate
+        from apigen.backend.zdesk.template import template
+    if backend == 'tfc':
+        from apigen.backend.tfc.generator import generate
+        from apigen.backend.tfc.template import template
+    elif backend == 'listing':
+        from apigen.backend.listing.generator import generate
+        from apigen.backend.listing.template import template
+    elif backend == 'go':
+        from apigen.backend.go.generator import generate
+        from apigen.backend.go.template import template
+    elif backend == 'junonia':
+        from apigen.backend.junonia.generator import generate
+        from apigen.backend.junonia.template import template
+        
+    api_file, content = generate(api_items, duplicate_api_items, dupe_info)
+
+    if not out:
+        out = api_file
+
+    with open(out, 'w') as f:
+        f.write(template.format(content))
+
+if __name__ == '__main__':
+    import plac
+    plac.call(main)
+
