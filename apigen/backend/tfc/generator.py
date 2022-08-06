@@ -1,6 +1,3 @@
-import itertools
-
-
 def _sanitize(q):
     return q.replace('[', '_').replace(']', '')
 

@@ -7,56 +7,30 @@ def _sanitize(q):
     return q.replace('[', '_').replace(']', '')
 
 
-def generate(api_items, duplicate_api_items, dupe_info):
-    if not os.path.isdir('cmd'):
-        print('cmd dir not found. run from zdesk-cli project root.')
-        sys.exit()
+def generate(program, api_items, duplicate_api_items, dupe_info):
+    md_dir = 'doc'
 
-    if not os.path.isdir('doc'):
-        print('doc dir not found. run from zdesk-cli project root.')
-        sys.exit()
+    if not os.path.isdir(md_dir):
+        os.makedirs(md_dir)
 
-    files =      [os.path.join('cmd', f) for f in os.listdir('cmd')]
-    files.extend([os.path.join('doc', f) for f in os.listdir('doc')])
-
-    try:
-        files.remove(os.path.join('doc', 'zdesk.md'))
-    except ValueError:
-        print('Main doc file zdesk.md not found. Run from zdesk-cli project root.')
-
-    try:
-        for f in files:
-            os.unlink(f)
-    except FileNotFoundError as e:
-        print(f'Unable to remove file {e.filename}')
-        sys.exit()
-
+    # name = admin_user_actions_grant_admin
     for name in sorted(list(api_items.keys())):
+        # doc/tfh_admin_user_actions_grant_admin.md
+        doc_file = f'{md_dir}/{program}_{name}.md'
+
         item = api_items[name]
 
-        for name_part in 
+        # tfh admin user_actions_grant_admin
+        cmd = item['docfile'].replace('/', ' ')
+
+        if os.path.isfile(doc_file):
+            os.unlink(doc_file)
 
         # Sorting the parameters alphabetically should prevent needless differences
         # when small changes are made in different locations, so the order will be
         # the same regardless as to which parameter is found first.
         item['opt_path_params'].sort()
         item['query_params'].sort()
-
-        # These parameters are already included in the common options, so if
-        # they happened to have been in the docs they will collide.
-        common_params = [
-            'include',
-            'page',
-            'per_page', 
-            'sort_by',
-            'sort_order',
-        ]
-
-        for cp in common_params:
-            try:
-                item['query_params'].remove(cp)
-            except ValueError:
-                pass
 
         content = ''
         doc_content = ''

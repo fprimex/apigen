@@ -35,6 +35,9 @@ description:
     doc_files = get_docs(docs)
     api_items, duplicate_api_items, dupe_info = parse_docs(docs, doc_files)
 
+    from pprint import pprint
+    pprint(api_items)
+
     if backend == 'zdesk':
         from apigen.backend.zdesk.generator import generate
         from apigen.backend.zdesk.template import template
