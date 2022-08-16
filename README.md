@@ -1,18 +1,23 @@
-# API bindings generator
+# Zendesk API bindings generator
 
-This package provides `apigen`, an API bindings generator for REST
-API services. The code currently generates
-
-* The `zdesk_api.py` file for the `zdesk` project
-* The `doc` directory used by the `zdesk-cli` project
-* Most of the `doc` files used by the `tfh` project
+This package provides `zdgen`, an API bindings generator for the Zendesk REST
+API. The code currently generates the `zdesk_api.py` file for the `zdesk`
+project, but there are more projects planned.
 
 # Requirements
 
 The API generator needs Python 3, `requests`, `BeautifulSoup4`, and
 `inflection` installed. See the `requirements.txt` file. There also needs to be
 a POSIX compliant `patch` executable in your path for applying the patches.
-Linux and OSX have this. On Windows the WSL is strongly recommended.
+Linux and OSX have this, but on Windows it will need to be installed manually
+with something like Cygwin.
+
+# Contributing
+
+Pull requests and patches to make `zdgen` compatible with Python 2 will not be
+accepted. This is a Python 3 codebase. The _output_ of `zdgen` for Python,
+however, is aimed to be Python 2 and Python 3 compliant, and patches to fix
+Python 2 compatibility in the output are welcome.
 
 # Setup and execution
 
@@ -27,7 +32,7 @@ $ python setup.py develop
 
 $ cd somewhere/you/want/to/store/docs/and/output
 
-$ apigen [options] FRONTEND BACKEND
+$ zdgen [options] BACKEND
 ```
 
 # Usage
@@ -35,29 +40,16 @@ $ apigen [options] FRONTEND BACKEND
 Full options to `zdgen` are shown below in the help output:
 
 ```
-usage: apigen [-h] [-out OUTFILE] [-docs DOCDIR] FRONTEND BACKEND
+usage: zdgen [-h] [-out OUTFILE] [-docs DOCDIR] BACKEND
 
 description:
-  Generate an API language binding directly from the API's documentation
+  Generate Zendesk language bindings directly from documentation located at
+  developer.zendesk.com. Available Backends are:
 
-  Available frontend APIs are:
-  zendesk - The Zendesk helpdesk REST API
-  tfc     - The Terraform Cloud and Enterprise REST API
-
-  Zendesk available Backends are:
-  zdesk   - Python for use with zdesk. File: zdesk_api.py
-  zdesk.sh- Bourne shell for use with junonia. Output: junonia filetree
-  go      - Golang for use with zdesk-go. File: zdesk_api.go
-
-  TFC available Backends are:
-  tfc     - Python for use with tfc. File: tfc_api.py
-  tfc.sh  - Bourne shell for use with junonia. Output: junonia filetree
-
-  Other backends:
+  zdesk   - Python 2 and 3 for use with zdesk. File: zdesk_api.py
   listing - Text file listing of all endpoints. File: listing.txt
 
 positional arguments:
-  FRONTEND      API to implement
   BACKEND       Programming language to generate binding for
 
 optional arguments:
@@ -68,32 +60,27 @@ optional arguments:
 
 # Under the hood
 
-When `apigen` is executed for the first time, the following happens:
+When `zdgen` is executed for the first time, the following happens:
 
-All:
 * `apidocs` dir is deleted if it is present
 * `apidocs_orig` dir is made if it is not present
-
-For Zendesk:
 * The introduction pages for each API component is downloaded
 * The intro pages are scraped for all other pages which are downloaded
-
-TFC:
-* TODO: document when stabilized
-
-All:
 * Pages are written into the `apidocs_orig` dir
 * `apidocs_orig` is copied to apidocs
 * `apidocs` pages are patched with the diffs in `patches` dir
 * Patched `apidocs` pages are scraped for REST API info
 * Duplicates, redundant, and ambiguous endpoints are resolved
-* The code is formatted into to the template(s)
-* The backend file or directory is written to the current directory or given path
+* The actual `zdesk_api.py` code is generated
+* The code is formatted into to the template
+* The backend file is written to the current directory or given path
 
 On subsequent runs, the following happens:
 
-* `apidocs` dir is deleted if present
-* The generation target (file or directory) is deleted if present
+* `apidocs` dir is deleted if it is present
+* The introduction pages are located in the `apidocs_orig` dir
+* The intro pages are scraped for all other pages
+* The needed pages are located in the `apidocs_orig` dir
 * `apidocs_orig` is copied to `apidocs` and the rest happens as before
 
 # Developing patches to the documentation
