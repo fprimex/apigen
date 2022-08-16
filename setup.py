@@ -3,18 +3,18 @@ import sys
 
 setup(
     # Basic package information.
-    name = 'zdgen',
+    name = 'apigen',
     author = 'Brent Woodruff',
-    version = '1.0.0',
-    scripts = ['bin/zdgen'],
+    version = '2.0.0',
+    scripts = ['bin/apigen'],
     author_email = 'brent@fprimex.com',
-    packages = ['zdgen'],
+    packages = ['apigen'],
     include_package_data = True,
     install_requires = ['plac', 'requests', 'inflection', 'beautifulsoup4'],
     license='LICENSE.txt',
-    url = 'https://github.com/fprimex/zdesk_apigen',
-    keywords = 'zendesk api helpdesk',
-    description = 'Zendesk API generator which uses developer.zendesk.com',
+    url = 'https://github.com/fprimex/apigen',
+    keywords = 'zendesk api terraform helpdesk',
+    description = 'API generator for multiple popular REST APIs',
     classifiers = [
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',

@@ -2,4 +2,4 @@ include LICENSE.txt
 include README.md
 include CHANGELOG.md
 include CONTRIBUTORS.md
-recursive-include zdgen *
+recursive-include apigen *
