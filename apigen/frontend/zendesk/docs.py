@@ -127,16 +127,24 @@ def get_docs(apidocs):
 
     docs_list = os.listdir()
     os.chdir('..')
-    patch_docs(docs)
+
+    apidocs_orig = '{0}_orig'.format(apidocs)
+    shutil.copytree(apidocs_orig, apidocs)
+
+    patch_docs(apidocs)
+
     return docs_list
 
 
 def patch_docs(apidocs):
-    apidocs_orig = '{0}_orig'.format(apidocs)
 
-    patchpath = os.path.join(os.path.dirname(inspect.getfile(apigen)), 'patches')
+    patchpath = os.path.join(os.path.dirname(inspect.getfile(apigen)),
+                             'frontend', 'zendesk', 'patches')
+
+    if not os.path.isdir(patchpath):
+        return
+
     patchfiles = os.listdir(patchpath)
-    shutil.copytree(apidocs_orig, apidocs)
     os.chdir(apidocs)
 
     for patchfile in patchfiles:
@@ -161,6 +169,28 @@ def parse_docs(apidocs, doc_files):
 
     api_items = {}
     duplicate_api_items = {}
+
+    api_items['service'] =     'Zendesk'
+    api_items['description'] = 'https://developer.zendesk.com/api-reference/\n\n'
+    api_items['options'] =     '### Options\n\n'
+    api_items['options'] +=    '* `-hostname HOSTNAME`\n\n'
+    api_items['options'] +=    'Zendesk host (e.g. example.zendesk.com)\n\n'
+    api_items['options'] +=    '* `-email EMAIL`\n\n'
+    api_items['options'] +=    'Zendesk login email to be used with -password OR -api.\n\n'
+    api_items['options'] +=    '* `-password PASSWORD`\n\n'
+    api_items['options'] +=    'Zendesk login password\n\n'
+    api_items['options'] +=    '* `-api API_TOKEN`\n\n'
+    api_items['options'] +=    'Zendesk personal API token\n\n'
+    api_items['options'] +=    '* `-oauth OAUTH_TOKEN`\n\n'
+    api_items['options'] +=    'Zendesk OAuth token\n\n'
+    api_items['options'] +=    '* `-curlrc FILEPATH`\n\n'
+    api_items['options'] +=    'Curl configuration file providing an access token for API requests\n\n'
+    api_items['options'] +=    '* `-v, -verbose`\n\n'
+    api_items['options'] +=    'Enable verbose messages\n\n'
+    api_items['options'] +=    '* `-vv, -vverbose`\n\n'
+    api_items['options'] +=    'Enable very verbose messages\n\n'
+    api_items['options'] +=    '* `-vvv, -vvverbose`\n\n'
+    api_items['options'] +=    'Enable very very verbose messages\n'
 
     for doc_file in doc_files:
         if '.orig' in doc_file or '.swp' in doc_file or doc_file in skipfiles:
@@ -252,8 +282,6 @@ def parse_docs(apidocs, doc_files):
                         make_next_singular = False
                         path_parts[i] = inflection.singularize(path_parts[i])
 
-                path_len = len(path_parts)
-
                 for i in param_indexes[::-1]:
                     del path_parts[i]
 
@@ -267,19 +295,24 @@ def parse_docs(apidocs, doc_files):
                     api_item['query_params'].append(query_items[0])
 
                 path_parts.reverse()
+
+                api_item['name_parts'] = path_parts
                 name = '_'.join(path_parts)
+
                 if is_singular:
                     name = inflection.singularize(name)
+                    if len(path_parts) > 0:
+                        api_item['name_parts'][-1] = inflection.singularize(api_item['name_parts'][-1])
 
                 if not has_action:
                     if api_item['method'] == 'DELETE':
-                        name = name + '_delete'
+                        ext = 'delete'
                     elif api_item['method'] == 'PUT':
-                        name = name + '_update'
+                        ext = 'update'
                     elif api_item['method'] == 'POST':
-                        name = name + '_create'
+                        ext = 'create'
                     elif api_item['method'] == 'GET' and is_singular:
-                        name = name + '_show'
+                        ext = 'show'
                     elif (
                         api_item['method'] == 'GET' and
                         (len(api_item['path_params']) == 0 or
@@ -287,7 +320,11 @@ def parse_docs(apidocs, doc_files):
                              api_item['path_params'][0] == 'locale') and
                          (name[-3:] != '_me' and '_me_' not in name)
                     ):
-                        name = name + '_list'
+                        ext = 'list'
+
+                if ext:
+                    name = name + '_' + ext
+                    api_item['name_parts'].append(ext)
 
                 api_item['path_params'].reverse()
                 api_item['query_params'].reverse()
@@ -309,6 +346,14 @@ def parse_docs(apidocs, doc_files):
     should_keep = resolve_duplicates(api_items, duplicate_api_items)
 
     os.chdir('..')
+
+    #with open('names', 'w') as f:
+    #    for k, v in api_items.items():
+    #        from pprint import pprint
+    #        #f.write(' '.join(v['name_parts']) + '\n')
+    #        pprint(v, f)
+    #        break
+
     return api_items, duplicate_api_items, should_keep
 
 def resolve_duplicates(api_items, duplicate_api_items):

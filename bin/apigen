@@ -19,24 +19,33 @@ description:
   zendesk - The Zendesk helpdesk REST API
   tfc     - The Terraform Cloud and Enterprise REST API
 
-  Available Backends are:
+  Zendesk available Backends are:
   zdesk   - Python for use with zdesk. File: zdesk_api.py
-  tfc     - Python for use with tfc. File: tfc_api.py
+  zdesk.sh- Bourne shell for use with junonia. Output: junonia filetree
   go      - Golang for use with zdesk-go. File: zdesk_api.go
+
+  TFC available Backends are:
+  tfc     - Python for use with tfc. File: tfc_api.py
+  tfc.sh  - Bourne shell for use with junonia. Output: junonia filetree
+
+  Other backends:
   listing - Text file listing of all endpoints. File: listing.txt"""
 
+    program = None
     if frontend == 'zendesk':
+        program = 'zdesk'
         from apigen.frontend.zendesk.docs import get_docs
         from apigen.frontend.zendesk.docs import parse_docs
     elif frontend == 'tfc':
+        program = 'tfh'
         from apigen.frontend.tfc.docs import get_docs
         from apigen.frontend.tfc.docs import parse_docs
 
     doc_files = get_docs(docs)
     api_items, duplicate_api_items, dupe_info = parse_docs(docs, doc_files)
 
-    from pprint import pprint
-    pprint(api_items)
+    #from pprint import pprint
+    #pprint(api_items)
 
     if backend == 'zdesk':
         from apigen.backend.zdesk.generator import generate
@@ -54,7 +63,7 @@ description:
         from apigen.backend.junonia.generator import generate
         from apigen.backend.junonia.template import template
         
-    api_file, content = generate(api_items, duplicate_api_items, dupe_info)
+    api_file, content = generate(api_items, duplicate_api_items, dupe_info, program)
 
     if not out:
         out = api_file

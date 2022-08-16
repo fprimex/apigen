@@ -1,5 +1,7 @@
 import os
 import os.path
+import re
+import shutil
 import sys
 
 
@@ -7,18 +9,38 @@ def _sanitize(q):
     return q.replace('[', '_').replace(']', '')
 
 
-def generate(program, api_items, duplicate_api_items, dupe_info):
-    md_dir = 'doc'
+def generate(api_items, duplicate_api_items, dupe_info, program=None):
+    if api_items['service'] == 'Zendesk':
+        program = 'zdesk'
+    elif api_items['service'] == 'Terraform Cloud and Enterprise':
+        program = 'tfh'
 
-    if not os.path.isdir(md_dir):
-        os.makedirs(md_dir)
+    md_dir  = 'doc'
+    cmd_dir = 'cmd'
 
-    # name = admin_user_actions_grant_admin
-    for name in sorted(list(api_items.keys())):
+    if os.path.isdir(md_dir):
+        shutil.rmtree(md_dir)
+
+    if os.path.isdir(cmd_dir):
+        shutil.rmtree(cmd_dir)
+
+    os.makedirs(md_dir)
+    os.makedirs(cmd_dir)
+
+    cmd_items = {}
+    for name in list(api_items.keys()):
+        cmd_name = ' '.join(api_items[name]['name_parts']).replace('_', '-')
+        cmd_items[cmd_name] = api_items[name]
+        cmd_items[cmd_name]['name'] = name
+
+    for cmd_name in sorted(list(cmd_items.keys())):
+        print(cmd_name)
+        item = cmd_items[cmd_name]
+        name = item['name']
+        fname = '_'.join( [i.replace('_', '-') for i in item['name_parts']] )
+
         # doc/tfh_admin_user_actions_grant_admin.md
-        doc_file = f'{md_dir}/{program}_{name}.md'
-
-        item = api_items[name]
+        doc_file = f'{md_dir}/{program}_{fname}.md'
 
         # tfh admin user_actions_grant_admin
         cmd = item['docfile'].replace('/', ' ')
@@ -32,83 +54,73 @@ def generate(program, api_items, duplicate_api_items, dupe_info):
         item['opt_path_params'].sort()
         item['query_params'].sort()
 
-        content = ''
         doc_content = ''
 
-        content += '# {}\n'.format(item['docpage'])
-        content += 'zdesk_%s () {\n' % name.replace(' ', '_')
-        content += '  method={}\n'.format(item['method'])
+        path_upper = re.sub('{[-_a-zA-Z0-9]+}',
+                            lambda m: m.group(0).upper(), item['path'])
 
-        doc_content += '## `zdesk %s`\n\n' % name.replace('_', '-')
-        doc_content += '%s\n\n' % item['path'].replace('/api/v2', '')
-        doc_content += '### Synopsis\n\n'
-        doc_content += '    zdesk %s [ ... ]\n\n' % name.replace('_', '-')
-        doc_content += '### Description\n\n'
-        doc_content += '%s\n\n' % item['docpage']
+        doc_content += f'## `{program} {cmd_name}`\n\n'
+        doc_content += f'{path_upper.replace("/api/v2", "")}\n\n'
+        doc_content += f'### Synopsis\n\n'
+        doc_content += f'    {program} {cmd_name} [ ... ]\n\n'
+        doc_content += f'### REST endpoint\n\n'
+        doc_content += f'    {item["method"]} https://{{HOSTNAME}}{path_upper}\n\n'
+        doc_content += f'### Description\n\n'
+        doc_content += f'{item["docpage"]}\n\n'
 
         if item['path_params'] or item['opt_path_params']:
-            content += '  url="$(echo "{}" | sed \\\n'.format(item['path'])
-
             doc_content += '### Positional parameters\n\n'
   
-            shifts = "\n"
             for p in item['path_params']:
-                content += '    -e "s/{%s}"/"$1"/ \\\n' % p
-                shifts += "  shift\n"
-
-                doc_content += '* `%s`\n\n' % p.upper()
-                #doc_content_pos += 'some param docs?\n\n'
-
-            content += '  )"'
-            content += shifts
+                doc_content += f'* `{p.upper()}`\n\n'
 
             if item['opt_path']:
                 opt_test = ' && '.join([ '[ -n "{}" ]'.format(opt) for opt in item['opt_path_params']])
-                content += '  if {}; then\n'.format(opt_test)
-                content += '    url="$(echo "{}" | sed \\ \n'.format(item['opt_path'])
 
-                shifts = "\n"
                 for p in item['path_params']:
-                    content += '    -e "{%s}" "$1" \\ \n' % p
-                    shifts += "  shift\n"
-
-                    doc_content += '* `%s`\n\n' % p.upper()
-                    #doc_content += 'some param docs?\n\n'
-
-                content += '     )"'
-                content += shifts
-                content += '  fi\n'
-        else:
-            content += '  url={}\n'.format(item['path'])
+                    doc_content += '* `{p.upper()}`\n\n'
 
         if item['query_params']:
             doc_content += '### Options\n\n'
 
         for q in item['query_params']:
-            content += '  [ -n "$1" ] && query="$query&{}=$1"\n'.format(_sanitize(q))
-            content += '  shift\n'
-
             doc_content += '* `-%s OPTION`\n\n' % _sanitize(q).replace('_', '-')
-            #doc_content += 'some option docs?\n\n'
 
-
-        content += '}'
-
-        with open(os.path.join('cmd', 'zdesk_%s.sh' % name.replace(' ', '_')), 'w') as f:
-            f.write(content)
-
-        with open(os.path.join('doc', 'zdesk_%s.md' % name.replace(' ', '_')), 'w') as f:
+        md_filename = f'{program}_{fname}.md'
+        with open(os.path.join(md_dir, md_filename), 'w') as f:
             f.write(doc_content)
 
-    for name in sorted(list(api_items.keys())):
-        name_parts = name.split(' ')[::-1]
-        fname = name_parts.pop()
+    with open(os.path.join(md_dir, f'{program}.md'), 'w') as f:
+        f.write(f'## `{program}`\n\n')
+        f.write(f'Command line interface for {api_items["service"]}\n\n')
+        f.write( '### Synopsis\n\n')
+        f.write(f'    {program} SUBCOMMAND [ ... ]\n\n')
+        f.write( '### Description\n\n')
+
+        if 'description' in api_items:
+            f.write(api_items['description'])
+
+        if 'options' in api_items:
+            f.write(api_items['options'])
+
+    for cmd_name in sorted(list(cmd_items.keys())):
+        item = cmd_items[cmd_name]
+        name_parts = item['name_parts'][::-1]
+        fname = name_parts.pop().replace('_', '-')
         while name_parts:
-            fpath = os.path.join('doc', 'zdesk_' + fname.replace(' ', '_') + '.md')
+            md_filename = f'{program}_{fname.replace(" ", "_")}.md'
+            fpath = os.path.join('doc', md_filename)
             if not os.path.isfile(fpath):
                 with open(fpath, "w") as f:
-                    f.write("## `zdesk %s`\n" % fname.replace('_', '-'))
-            fname = fname + ' ' + name_parts.pop()
+                    f.write(f'## `{program} {fname}`\n\n')
+                    f.write(f'Run {fname} subcommands\n\n')
+                    f.write(f'### Synopsis\n\n')
+                    f.write(f'    {program} {fname} COMMAND[ ... ]\n\n')
+                    f.write(f'')
+                    f.write(f'### Description\n\n')
+                    f.write(f'Run {fname} subcommands\n\n')
+
+            fname = fname + ' ' + name_parts.pop().replace('_', '-')
 
     sys.exit()
     #return ('zd.sh', content)
