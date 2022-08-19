@@ -77,7 +77,7 @@ def get_docs(apidocs):
     if os.path.isdir(apidocs):
         shutil.rmtree(apidocs)
 
-    apidocs_orig = '{0}_orig'.format(apidocs)
+    apidocs_orig = f'{apidocs}_orig'
 
     if not os.path.isdir(apidocs_orig):
         os.makedirs(apidocs_orig)
@@ -208,7 +208,7 @@ def parse_docs(apidocs, doc_files):
 
             text = tag.get_text()
             match = re.match(
-                r'\s*(OPTIONS|GET|HEAD|POST|PUT|DELETE|TRACE|CONNECT) (.*)', text)
+                r'\s*(OPTIONS|GET|HEAD|POST|PATCH|PUT|DELETE|TRACE|CONNECT) (.*)', text)
             if match:
                 cat = os.path.basename(doc_file.split('_')[0])
                 page = doc_file.replace(cat + '_', '')

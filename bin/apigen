@@ -33,11 +33,9 @@ description:
 
     program = None
     if frontend == 'zendesk':
-        program = 'zdesk'
         from apigen.frontend.zendesk.docs import get_docs
         from apigen.frontend.zendesk.docs import parse_docs
     elif frontend == 'tfc':
-        program = 'tfh'
         from apigen.frontend.tfc.docs import get_docs
         from apigen.frontend.tfc.docs import parse_docs
 

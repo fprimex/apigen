@@ -1,4 +1,5 @@
 import itertools
+import os
 
 def resolve_duplicates(api_items, duplicate_api_items):
     dupe_info = ''

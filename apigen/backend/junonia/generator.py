@@ -1,34 +1,47 @@
+import inspect
 import os
 import os.path
 import re
 import shutil
 import sys
 
+import apigen
 
 def _sanitize(q):
     return q.replace('[', '_').replace(']', '')
 
 
 def generate(api_items, duplicate_api_items, dupe_info, program=None):
-    if api_items['service'] == 'Zendesk':
+    service = api_items.pop('service', 'none')
+    if service == 'Zendesk':
         program = 'zdesk'
-    elif api_items['service'] == 'Terraform Cloud and Enterprise':
+        url_prepend = ''
+    elif service == 'Terraform Cloud and Enterprise':
         program = 'tfh'
+        url_prepend = '/api/v2'
+    else:
+        print(f'unknown service {api_items["service"]}')
+        sys.exit(1)
+
+    desc = api_items.pop('description', '')
+    options = api_items.pop('options', '')
+
+    outputspath = os.path.join(os.path.dirname(inspect.getfile(apigen)),
+                         'backend', 'junonia', 'outputs', program)
+
+    if not os.path.isdir(outputspath):
+        outputspath = ''
 
     md_dir  = 'doc'
-    cmd_dir = 'cmd'
 
     if os.path.isdir(md_dir):
         shutil.rmtree(md_dir)
 
-    if os.path.isdir(cmd_dir):
-        shutil.rmtree(cmd_dir)
-
     os.makedirs(md_dir)
-    os.makedirs(cmd_dir)
 
     cmd_items = {}
     for name in list(api_items.keys()):
+        print(f'    {name}')
         cmd_name = ' '.join(api_items[name]['name_parts']).replace('_', '-')
         cmd_items[cmd_name] = api_items[name]
         cmd_items[cmd_name]['name'] = name
@@ -64,7 +77,7 @@ def generate(api_items, duplicate_api_items, dupe_info, program=None):
         doc_content += f'### Synopsis\n\n'
         doc_content += f'    {program} {cmd_name} [ ... ]\n\n'
         doc_content += f'### REST endpoint\n\n'
-        doc_content += f'    {item["method"]} https://{{HOSTNAME}}{path_upper}\n\n'
+        doc_content += f'    {item["method"]} https://{{HOSTNAME}}{url_prepend}{path_upper}\n\n'
         doc_content += f'### Description\n\n'
         doc_content += f'{item["docpage"]}\n\n'
 
@@ -90,18 +103,19 @@ def generate(api_items, duplicate_api_items, dupe_info, program=None):
         with open(os.path.join(md_dir, md_filename), 'w') as f:
             f.write(doc_content)
 
+            output_file = os.path.join(outputspath, md_filename)
+            if os.path.isfile(output_file):
+                with open(output_file) as of:
+                    f.write(of.read())
+
     with open(os.path.join(md_dir, f'{program}.md'), 'w') as f:
         f.write(f'## `{program}`\n\n')
-        f.write(f'Command line interface for {api_items["service"]}\n\n')
+        f.write(f'Command line interface for {service}\n\n')
         f.write( '### Synopsis\n\n')
         f.write(f'    {program} SUBCOMMAND [ ... ]\n\n')
         f.write( '### Description\n\n')
-
-        if 'description' in api_items:
-            f.write(api_items['description'])
-
-        if 'options' in api_items:
-            f.write(api_items['options'])
+        f.write(desc)
+        f.write(options)
 
     for cmd_name in sorted(list(cmd_items.keys())):
         item = cmd_items[cmd_name]
