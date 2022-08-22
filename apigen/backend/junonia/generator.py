@@ -6,6 +6,7 @@ import shutil
 import sys
 
 import apigen
+import inflection
 
 def _sanitize(q):
     return q.replace('[', '_').replace(']', '')

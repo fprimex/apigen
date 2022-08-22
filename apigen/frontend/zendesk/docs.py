@@ -307,7 +307,7 @@ def parse_docs(apidocs, doc_files):
                 if not has_action:
                     if api_item['method'] == 'DELETE':
                         ext = 'delete'
-                    elif api_item['method'] == 'PUT':
+                    elif api_item['method'] == 'PUT' or api_item['method'] == 'PATCH':
                         ext = 'update'
                     elif api_item['method'] == 'POST':
                         ext = 'create'
