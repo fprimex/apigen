@@ -5,7 +5,11 @@ def _sanitize(q):
     return q.replace('[', '_').replace(']', '')
 
 
-def generate(api_items, duplicate_api_items, dupe_info):
+def generate(api_items, duplicate_api_items, dupe_info, program=None):
+    api_items.pop('service')
+    api_items.pop('description')
+    api_items.pop('options')
+
     content = ''
 
     if dupe_info:
