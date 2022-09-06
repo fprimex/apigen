@@ -3,10 +3,10 @@
 # (help, kind, abbrev, type, choices, metavar)
 def main(frontend: ('API to implement',
                    'positional', None, None,
-                   ['zendesk', 'tfc'], 'FRONTEND'),
+                   ['zendesk', 'tfc', 'pipedream'], 'FRONTEND'),
          backend: ('Programming language to generate binding for',
                    'positional', None, None,
-                   ['zdesk', 'tfc', 'listing', 'go', 'junonia'], 'BACKEND'),
+                   ['zdesk', 'tfc', 'listing', 'go', 'junonia', 'pipedream'], 'BACKEND'),
          out: ('Output file for the binding (default: from backend)',
                'option', None, str, None, 'OUTFILE') = None,
          docs: ('Directory Zendesk docs will be stored in (default: apidocs)',
@@ -16,13 +16,15 @@ description:
   Generate an API language binding directly from the API's documentation
 
   Available frontend APIs are:
-  zendesk - The Zendesk helpdesk REST API
-  tfc     - The Terraform Cloud and Enterprise REST API
+  zendesk   - The Zendesk helpdesk REST API
+  tfc       - The Terraform Cloud and Enterprise REST API
+  pipedream - The Pipedream REST API
 
   Zendesk available Backends are:
-  zdesk   - Python for use with zdesk. File: zdesk_api.py
-  zdesk.sh- Bourne shell for use with junonia. Output: junonia filetree
-  go      - Golang for use with zdesk-go. File: zdesk_api.go
+  zdesk     - Python for use with zdesk. File: zdesk_api.py
+  zdesk.sh  - Bourne shell for use with junonia. Output: junonia filetree
+  go        - Golang for use with zdesk-go. File: zdesk_api.go
+  pipedream - Python for use with pipedream. File: pipedream_api.py
 
   TFC available Backends are:
   tfc     - Python for use with tfc. File: tfc_api.py
@@ -38,6 +40,9 @@ description:
     elif frontend == 'tfc':
         from apigen.frontend.tfc.docs import get_docs
         from apigen.frontend.tfc.docs import parse_docs
+    elif frontend == 'pipedream':
+        from apigen.frontend.pipedream.docs import get_docs
+        from apigen.frontend.pipedream.docs import parse_docs
 
     doc_files = get_docs(docs)
     api_items, duplicate_api_items, dupe_info = parse_docs(docs, doc_files)
@@ -60,6 +65,9 @@ description:
     elif backend == 'junonia':
         from apigen.backend.junonia.generator import generate
         from apigen.backend.junonia.template import template
+    elif backend == 'pipedream':
+        from apigen.backend.pipedream.generator import generate
+        from apigen.backend.pipedream.template import template
         
     api_file, content = generate(api_items, duplicate_api_items, dupe_info, program)
 

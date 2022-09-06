@@ -20,8 +20,11 @@ def generate(api_items, duplicate_api_items, dupe_info, program=None):
     elif service == 'Terraform Cloud and Enterprise':
         program = 'tfh'
         url_prepend = '/api/v2'
+    elif service == 'Pipedream':
+        program = 'pd'
+        url_prepend = ''
     else:
-        print(f'unknown service {api_items["service"]}')
+        print(f'unknown or missing service')
         sys.exit(1)
 
     desc = api_items.pop('description', '')
